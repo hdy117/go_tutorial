@@ -485,8 +485,43 @@ func main() {
 
 	// 练习 5：实现一个记忆化函数，缓存任意函数的结果（进阶）
 	//   func memoize(f func(int) int) func(int) int
-	//
+	type OneFunc func(int) int
+	memFunc := func(oneFunc OneFunc) OneFunc {
+		cacheMap := map[int]int{}
+
+		return func(key int) int {
+			if v, ok := cacheMap[key]; ok {
+				fmt.Println("cache hit for val:", key)
+				return v
+			}
+
+			out := oneFunc(key)
+			cacheMap[key] = out
+			fmt.Println("no cache hit for val:", key)
+
+			return out
+		}
+	}
+	getcacheMapFunc := memFunc(func(val int) int { return val * val })
+
+	Separator()
+	fmt.Println("getcacheMapFunc(1):", getcacheMapFunc(1))
+	fmt.Println("getcacheMapFunc(1):", getcacheMapFunc(1))
+
 	// 练习 6：实现一个管道（pipeline）函数链
 	//   func pipeline(data int, funcs ...func(int) int) int
 	//   示例：pipeline(5, double, addOne, square) = ((5*2)+1)^2 = 121
+	pipeline := func(val int, funcs ...OneFunc) int {
+		for _, oneFunc := range funcs {
+			val = oneFunc(val)
+		}
+		return val
+	}
+
+	Separator()
+	res := pipeline(5,
+		func(val int) int { return val * 2 },
+		func(val int) int { return val + 1 },
+		func(val int) int { return val * val })
+	fmt.Println("pipeline:",res)
 }
