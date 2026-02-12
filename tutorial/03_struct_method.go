@@ -22,6 +22,7 @@ package main
 
 import (
 	"encoding/json"
+	"errors"
 	"fmt"
 	"os"
 	"reflect"
@@ -518,17 +519,40 @@ func main() {
 
 	//
 	// 练习 2：实现一个 Book 结构体
-	//   - 字段：Title, Author, ISBN, Price, PublishedYear
+	//   - 字段：Title, Author, ISBN, Price, publishSecond
 	//   - 实现 ApplyDiscount(discountPercent float64) 打折
 	//   - 实现 GetAge() 返回书的"年龄"
 	//   - 实现 String() string 方法（格式化输出）
-	//
+	separator()
+	dateStr := "2000-01-01 00:00:00"
+	parsed, _ := time.Parse(time.DateTime, dateStr)
+	book := NewBook("OneBook", "Jack", "flandfslkfasdoiufoias", 48.0, parsed.UTC())
+	fmt.Println("original price:", book.GetOriginalPrice())
+	curPrice, _ := book.ApplyDiscount(70)
+	fmt.Println("original price:", curPrice)
+	fmt.Println("age[day]:", book.GetAge())
+	book.PrintAll()
+
 	// 练习 3：使用嵌入实现以下结构
 	//   - 基础 Person 结构体（Name, Age）
 	//   - Student 嵌入 Person，添加 StudentID, Major, Grades([]float64)
 	//   - Teacher 嵌入 Person，添加 TeacherID, Department, Salary
 	//   - 为 Student 实现 GetAverageGrade() 方法
-	//
+	separator()
+	student := &MyStudent{
+		person: &MyPerson{
+			Name: "Jim",
+			Age:  "12",
+		},
+		studentID: "789re7w9r",
+		major:     "Math",
+		grades:    []float32{89.0, 95.0, 92.0, 98.0},
+	}
+	avgGrade, err := student.GetAverageGrade()
+	if err != nil {
+		fmt.Println("err:", err.Error())
+	}
+	fmt.Println("avgGrade:", avgGrade)
 	// 练习 4：实现一个缓存结构体
 	//   type Cache struct {
 	//       data map[string]interface{}
@@ -538,7 +562,18 @@ func main() {
 	//   - 实现 Get(key string) (interface{}, bool)
 	//   - 实现 Delete(key string)
 	//   - Get 时检查是否过期
-	//
+	separator()
+	cache := &MyCache{
+		data: make(map[string]interface{}),
+		ttl:  make(map[string]time.Time),
+	}
+	cache.Set("oneKey", 78, time.Duration(2*time.Second))
+	v, expired := cache.Get("oneKey")
+	fmt.Println("v:", v, ", expired:", expired)
+	time.Sleep(3 * time.Second)
+	v, expired = cache.Get("oneKey")
+	fmt.Println("v:", v, ", expired:", expired)
+
 	// 练习 5：实现一个链表结构体
 	//   type Node struct {
 	//       Value int
@@ -549,4 +584,149 @@ func main() {
 	//   - 实现 Delete(index int) 删除指定位置
 	//   - 实现 Reverse() 反转链表
 	//   - 实现 String() 打印链表内容
+}
+
+// 练习 4：实现一个缓存结构体
+//
+//	type Cache struct {
+//	    data map[string]interface{}
+//	    ttl  map[string]time.Time  // 过期时间
+//	}
+//	- 实现 Set(key string, value interface{}, duration time.Duration)
+//	- 实现 Get(key string) (interface{}, bool)
+//	- 实现 Delete(key string)
+//	- Get 时检查是否过期
+type MyCache struct {
+	data map[string]interface{} // any data map
+	ttl  map[string]time.Time   // time to live map
+}
+
+func (obj *MyCache) Set(key string, val interface{}, duration time.Duration) {
+	obj.data[key] = val
+	obj.ttl[key] = time.Now().Add(duration)
+}
+
+func (obj *MyCache) Get(key string) (interface{}, bool) {
+	if v, ok := obj.data[key]; ok {
+		timeCompare := obj.ttl[key].Compare(time.Now())
+		expired := timeCompare <= 0
+		fmt.Println("obj.ttl[key]:", obj.ttl[key].Format(time.DateTime))
+		fmt.Println("time.Now():", time.Now().Format(time.DateTime))
+		return v, expired
+	}
+
+	return nil, false
+}
+
+// 练习 3：使用嵌入实现以下结构
+//   - 基础 Person 结构体（Name, Age）
+//   - Student 嵌入 Person，添加 StudentID, Major, Grades([]float64)
+//   - Teacher 嵌入 Person，添加 TeacherID, Department, Salary
+//   - 为 Student 实现 GetAverageGrade() 方法
+type MyPerson struct {
+	Name string
+	Age  string
+}
+
+type MyStudent struct {
+	person    *MyPerson
+	studentID string
+	major     string
+	grades    []float32
+}
+
+type MyTeacher struct {
+	person     *MyPerson
+	department string
+	salary     float32
+}
+
+func (obj *MyStudent) GetAverageGrade() (avgGrade float32, err error) {
+	// default
+	avgGrade = 0.0
+	err = nil
+
+	// early check
+	if obj == nil {
+		err = errors.New(fmt.Sprintln("student pointer is nullptr"))
+		return avgGrade, err
+	}
+
+	numOfGrades := len(obj.grades)
+
+	// early check again
+	if numOfGrades == 0 {
+		err = errors.New(fmt.Sprintln("student grades contains nothing"))
+		return avgGrade, err
+	}
+
+	// cal
+	sum := float32(0)
+	for _, v := range obj.grades {
+		sum += v
+	}
+	avgGrade = sum / float32(numOfGrades)
+	return
+}
+
+// 练习 2：实现一个 Book 结构体
+//   - 字段：Title, Author, ISBN, Price, publishSecond
+//   - 实现 ApplyDiscount(discountPercent float64) 打折
+//   - 实现 GetAge() 返回书的"年龄"
+//   - 实现 String() string 方法（格式化输出）
+type Book struct {
+	title         string
+	author        string
+	isbn          string
+	price         float32
+	publishSecond time.Time
+}
+
+// create one book
+func NewBook(title string, author string, isbn string, price float32, publishSecond time.Time) *Book {
+	return &Book{
+		title:         title,
+		author:        author,
+		isbn:          isbn,
+		price:         price,
+		publishSecond: publishSecond,
+	}
+}
+
+func (obj *Book) ApplyDiscount(discountPercent float32) (discountPrice float32, err error) {
+	// default value
+	discountPrice = obj.price
+
+	// early check
+	if discountPercent <= 0 || discountPercent >= 100 {
+		errInfo := fmt.Sprintln("discountPercent should with in (0,100), but got ", discountPercent)
+		err = errors.New(errInfo)
+		return
+	}
+
+	// calculate discount price
+	discountPrice = obj.price * discountPercent * 0.01
+	return discountPrice, nil
+}
+
+func (obj *Book) GetOriginalPrice() float32 {
+	return obj.price
+}
+
+func (obj *Book) GetAge() int {
+	curSec := time.Now().Unix()
+	pubSec := obj.publishSecond.Unix()
+	fmt.Println("pubSec:", pubSec, ", now curSec:", curSec)
+	return int((curSec - pubSec) / 60 / 60 / 24)
+}
+
+func (obj *Book) PrintAll() {
+	fmt.Println("title:", obj.title)
+	fmt.Println("author:", obj.author)
+	fmt.Println("isbn:", obj.isbn)
+	fmt.Println("price:", obj.price)
+	fmt.Println("publish time:", obj.publishSecond.Format(time.DateTime))
+	name, offset := obj.publishSecond.Zone()
+	fmt.Println("publish timezone:", name, ", offset:", offset)
+	fmt.Println("publish time in local:", obj.publishSecond.Local().Format(time.DateTime))
 }
