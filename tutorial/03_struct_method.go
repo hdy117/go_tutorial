@@ -23,8 +23,36 @@ package main
 import (
 	"encoding/json"
 	"fmt"
+	"os"
+	"reflect"
 	"time"
 )
+
+// ============================================
+// 练习：Rectangle 结构体和方法
+// ============================================
+
+type Rectangle struct {
+	length float32
+	width  float32
+}
+
+func (r *Rectangle) Area() float32 {
+	return r.length * r.width
+}
+
+func (r Rectangle) Perimeter() float32 {
+	return 2 * (r.length + r.width)
+}
+
+func (r *Rectangle) Scale(factor float32) {
+	r.length = r.length * factor
+	r.width = r.width * factor
+}
+
+func (r Rectangle) IsSquare() bool {
+	return r.length == r.width
+}
 
 // ============================================
 // 1. 结构体定义
@@ -40,18 +68,18 @@ type Person struct {
 
 // 包含多种类型的结构体
 type Employee struct {
-	ID        int
-	Name      string
-	Position  string
-	Salary    float64
-	HireDate  time.Time
-	IsActive  bool
+	ID       int
+	Name     string
+	Position string
+	Salary   float64
+	HireDate time.Time
+	IsActive bool
 }
 
 // 匿名字段（字段名即类型名）
 type Anonymous struct {
-	string  // 字段名是 "string"
-	int     // 字段名是 "int"
+	string // 字段名是 "string"
+	int    // 字段名是 "int"
 }
 
 // 嵌套结构体
@@ -64,14 +92,14 @@ type Address struct {
 type Contact struct {
 	Name    string
 	Email   string
-	Address Address  // 嵌套结构体
+	Address Address // 嵌套结构体
 }
 
 // 带有标签的结构体（常用于 JSON/XML 序列化）
 type User struct {
-	ID        int       `json:"id" db:"user_id"`           // 多个标签
-	Username  string    `json:"username,omitempty"`         // omitempty: 空值时省略
-	Password  string    `json:"-"`                          // -: 忽略此字段
+	ID        int       `json:"id" db:"user_id"`    // 多个标签
+	Username  string    `json:"username,omitempty"` // omitempty: 空值时省略
+	Password  string    `json:"-"`                  // -: 忽略此字段
 	Email     string    `json:"email" validate:"email"`
 	CreatedAt time.Time `json:"created_at"`
 	IsAdmin   bool      `json:"is_admin"`
@@ -84,29 +112,29 @@ type User struct {
 func demonstrateStructInit() {
 	// 方式1：按字段顺序初始化（不推荐，字段顺序改变会出错）
 	p1 := Person{"Alice", 30}
-	
+
 	// 方式2：按字段名初始化（推荐）
 	p2 := Person{
 		Name: "Bob",
 		Age:  25,
 	}
-	
+
 	// 方式3：零值初始化
-	var p3 Person  // Name="", Age=0
-	
+	var p3 Person // Name="", Age=0
+
 	// 方式4：new 关键字（返回指针）
-	p4 := new(Person)  // *Person，字段为零值
+	p4 := new(Person) // *Person，字段为零值
 	p4.Name = "Charlie"
-	
+
 	// 方式5：& 取地址（最常用）
 	p5 := &Person{Name: "David", Age: 35}
-	
+
 	fmt.Printf("p1: %+v\n", p1)
 	fmt.Printf("p2: %+v\n", p2)
 	fmt.Printf("p3: %+v\n", p3)
 	fmt.Printf("p4: %+v\n", *p4)
 	fmt.Printf("p5: %+v\n", p5)
-	
+
 	// 嵌套结构体初始化
 	contact := Contact{
 		Name:  "Eve",
@@ -118,6 +146,7 @@ func demonstrateStructInit() {
 		},
 	}
 	fmt.Printf("contact: %+v\n", contact)
+
 }
 
 // ============================================
@@ -162,16 +191,16 @@ func (p *Person) ChangeName(newName string) {
 
 func demonstrateReceiver() {
 	p := Person{Name: "Alice", Age: 30}
-	
+
 	// 值接收者 - 操作副本
 	fmt.Printf("Name: %s\n", p.GetName())
 	fmt.Printf("IsAdult: %v\n", p.IsAdult())
-	
+
 	// 指针接收者 - 修改原值
 	fmt.Printf("当前年龄: %d\n", p.Age)
-	p.HaveBirthday()  // 自动解引用，等价于 (&p).HaveBirthday()
+	p.HaveBirthday() // 自动解引用，等价于 (&p).HaveBirthday()
 	fmt.Printf("过生日后: %d\n", p.Age)
-	
+
 	p.ChangeName("Alicia")
 	fmt.Printf("改名后: %s\n", p.Name)
 }
@@ -185,17 +214,17 @@ func demonstrateReceiver() {
 
 func demonstrateMethodSet() {
 	p := Person{Name: "Bob", Age: 25}
-	
+
 	// 值类型可以调用值接收者方法
 	fmt.Println(p.GetName())
-	
+
 	// 值类型也可以调用指针接收者方法（Go 自动取地址）
-	p.HaveBirthday()  // 等价于 (&p).HaveBirthday()
-	
+	p.HaveBirthday() // 等价于 (&p).HaveBirthday()
+
 	// 指针类型可以调用所有方法
 	ptr := &p
-	fmt.Println(ptr.GetName())      // 值接收者
-	ptr.HaveBirthday()              // 指针接收者
+	fmt.Println(ptr.GetName()) // 值接收者
+	ptr.HaveBirthday()         // 指针接收者
 }
 
 // ============================================
@@ -221,15 +250,15 @@ func (e Engine) Stop() {
 
 // Car 嵌入了 Engine
 type Car struct {
-	Engine    // 匿名字段，嵌入
-	Brand string
-	Model string
+	Engine // 匿名字段，嵌入
+	Brand  string
+	Model  string
 }
 
 // 可以重写嵌入类型的方法
 func (c Car) Start() {
 	fmt.Printf("🚗 %s %s 准备启动...\n", c.Brand, c.Model)
-	c.Engine.Start()  // 调用嵌入类型的方法
+	c.Engine.Start() // 调用嵌入类型的方法
 }
 
 // 多层嵌入
@@ -250,14 +279,14 @@ func demonstrateEmbedding() {
 		Brand:  "Toyota",
 		Model:  "Camry",
 	}
-	
+
 	// 直接访问嵌入字段的方法和字段（提升）
-	fmt.Println("引擎功率:", car.Power)      // 等价于 car.Engine.Power
-	fmt.Println("引擎类型:", car.Type)       // 等价于 car.Engine.Type
-	
-	car.Start()  // 调用 Car.Start()
-	car.Stop()   // 调用 Engine.Stop()（被提升）
-	
+	fmt.Println("引擎功率:", car.Power) // 等价于 car.Engine.Power
+	fmt.Println("引擎类型:", car.Type)  // 等价于 car.Engine.Type
+
+	car.Start() // 调用 Car.Start()
+	car.Stop()  // 调用 Engine.Stop()（被提升）
+
 	// 也可以完整路径访问
 	car.Engine.Start()
 }
@@ -266,16 +295,31 @@ func demonstrateEmbedding() {
 // 7. 结构体标签（Tag）应用
 // ============================================
 
+func separator() {
+	fmt.Println("========================")
+}
+
 func demonstrateTag() {
 	user := User{
 		ID:        1,
 		Username:  "john_doe",
-		Password:  "secret123",  // 不会被序列化
+		Password:  "secret123", // 不会被序列化
 		Email:     "john@example.com",
 		CreatedAt: time.Now(),
 		IsAdmin:   false,
 	}
-	
+
+	// theory behind json and struct
+	tp := reflect.TypeOf(User{})
+	for i := 0; i < tp.NumField(); i++ {
+		fd := tp.Field(i)
+		fmt.Println("name:", fd.Name, ", tag:", fd.Tag, ", type:", fd.Type)
+		fmt.Println("json tag:", fd.Tag.Get("json"))
+		fmt.Println("db tag:", fd.Tag.Get("db"))
+		fmt.Println("validate tag:", fd.Tag.Get("validate"))
+	}
+	separator()
+
 	// 序列化为 JSON
 	jsonData, err := json.MarshalIndent(user, "", "  ")
 	if err != nil {
@@ -284,7 +328,7 @@ func demonstrateTag() {
 	}
 	fmt.Println("JSON 输出:")
 	fmt.Println(string(jsonData))
-	
+
 	// 从 JSON 解码
 	jsonInput := `{
 		"id": 2,
@@ -293,13 +337,36 @@ func demonstrateTag() {
 		"created_at": "2024-01-15T10:30:00Z",
 		"is_admin": true
 	}`
-	
+
 	var decoded User
 	if err := json.Unmarshal([]byte(jsonInput), &decoded); err != nil {
 		fmt.Println("JSON 解码错误:", err)
 		return
 	}
 	fmt.Printf("解码后: %+v\n", decoded)
+
+	// read and write json from/to file
+	jsonFile := "./user.json"
+	file, err := os.OpenFile(jsonFile, os.O_RDWR|os.O_CREATE, os.ModePerm)
+	defer file.Close()
+	jsonStr := `{
+		"id":2,
+		"username":"Jack",
+		"email":"jack@gmail.com",
+		"created_at": "2024-01-15T10:30:00Z",
+		"is_admin": false
+	}`
+	var userJack User
+	if err := json.Unmarshal([]byte(jsonStr), &userJack); err != nil {
+		fmt.Println("fail to unmarshal json str, ", jsonStr)
+	} else {
+		fmt.Println("unmarshaled user:", userJack)
+	}
+	jsonBytes, err := json.Marshal(&userJack)
+	if _, err := file.WriteString(string(jsonBytes)); err != nil {
+		fmt.Println("fail to write json string to file, ", string(jsonBytes))
+	}
+
 }
 
 // ============================================
@@ -311,21 +378,21 @@ func demonstrateComparison() {
 	p1 := Person{Name: "Alice", Age: 30}
 	p2 := Person{Name: "Alice", Age: 30}
 	p3 := Person{Name: "Bob", Age: 25}
-	
-	fmt.Printf("p1 == p2: %v\n", p1 == p2)  // true
-	fmt.Printf("p1 == p3: %v\n", p1 == p3)  // false
-	
+
+	fmt.Printf("p1 == p2: %v\n", p1 == p2) // true
+	fmt.Printf("p1 == p3: %v\n", p1 == p3) // false
+
 	// 包含切片或 map 的结构体不可比较
 	type Team struct {
 		Name    string
-		Members []string  // 切片不可比较
+		Members []string // 切片不可比较
 	}
-	
+
 	t1 := Team{Name: "A", Members: []string{"Alice", "Bob"}}
 	t2 := Team{Name: "A", Members: []string{"Alice", "Bob"}}
-	
+
 	// fmt.Println(t1 == t2)  // 编译错误！
-	
+
 	// 使用 reflect.DeepEqual 比较
 	fmt.Printf("DeepEqual: %v\n", fmt.Sprintf("%v", t1) == fmt.Sprintf("%v", t2))
 }
@@ -338,7 +405,7 @@ type BankAccount struct {
 	AccountNumber string
 	Owner         string
 	Balance       float64
-	isClosed      bool  // 小写：包内私有
+	isClosed      bool // 小写：包内私有
 }
 
 // 构造函数（惯用法）
@@ -389,23 +456,23 @@ func (ba *BankAccount) Close() {
 
 func demonstrateBankAccount() {
 	fmt.Println("\n=== 银行账户示例 ===")
-	
+
 	account := NewBankAccount("10086", "张三", 1000)
-	
+
 	fmt.Printf("初始余额: %.2f\n", account.GetBalance())
-	
+
 	if err := account.Deposit(500); err != nil {
 		fmt.Println("存款失败:", err)
 	} else {
 		fmt.Printf("存款 500 后余额: %.2f\n", account.GetBalance())
 	}
-	
+
 	if err := account.Withdraw(200); err != nil {
 		fmt.Println("取款失败:", err)
 	} else {
 		fmt.Printf("取款 200 后余额: %.2f\n", account.GetBalance())
 	}
-	
+
 	// 尝试透支
 	if err := account.Withdraw(2000); err != nil {
 		fmt.Println("取款失败:", err)
@@ -419,33 +486,36 @@ func demonstrateBankAccount() {
 func main() {
 	fmt.Println("=== 结构体初始化 ===")
 	demonstrateStructInit()
-	
+
 	fmt.Println("\n=== 方法接收者 ===")
 	demonstrateReceiver()
-	
+
 	fmt.Println("\n=== 方法集 ===")
 	demonstrateMethodSet()
-	
+
 	fmt.Println("\n=== 结构体嵌入 ===")
 	demonstrateEmbedding()
-	
+
 	fmt.Println("\n=== 结构体标签 ===")
 	demonstrateTag()
-	
+
 	fmt.Println("\n=== 结构体比较 ===")
 	demonstrateComparison()
-	
+
 	demonstrateBankAccount()
-	
+
 	// ============================================
 	// 练习题
 	// ============================================
 	//
-	// 练习 1：定义一个 Rectangle 结构体，包含 Width 和 Height
-	//   - 实现 Area() 计算面积
-	//   - 实现 Perimeter() 计算周长
-	//   - 实现 Scale(factor float64) 按因子缩放（修改原值）
-	//   - 实现 IsSquare() 判断是否为正方形
+	// 练习 1：使用 Rectangle 结构体
+	rect := Rectangle{length: 10, width: 5}
+	fmt.Println("Rectangle Area:", rect.Area())
+	fmt.Println("Rectangle Perimeter:", rect.Perimeter())
+	fmt.Println("Is Square:", rect.IsSquare())
+	rect.Scale(2)
+	fmt.Println("After Scale 2x:", rect)
+
 	//
 	// 练习 2：实现一个 Book 结构体
 	//   - 字段：Title, Author, ISBN, Price, PublishedYear
