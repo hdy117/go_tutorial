@@ -532,10 +532,10 @@ func main() {
 	//
 	Separator04()
 	eventBus := EventBus{
-		events:           make(chan IEvent, 5),
-		eventRouteMap:    EventRouteMap{},
-		stopSignal:       make(chan bool),
-		stopppedSignal:   make(chan bool),
+		events:        make(chan IEvent, 5),
+		eventRouteMap: EventRouteMap{},
+		stopSignal:    make(chan bool),
+		stoppedSignal: make(chan bool),
 	}
 	eventBus.Register(Event_UserLogin, UserLoginHandler)
 	eventBus.Register(Event_OrderCreate, OrderCreateHandler)
@@ -639,10 +639,10 @@ type HandleFunc = func(event IEvent)
 type EventRouteMap = map[EventType]HandleFunc
 
 type EventBus struct {
-	events         chan IEvent
-	eventRouteMap  EventRouteMap
-	stopSignal     chan bool
-	stopppedSignal chan bool
+	events        chan IEvent
+	eventRouteMap EventRouteMap
+	stopSignal    chan bool
+	stoppedSignal chan bool
 }
 
 func (obj *EventBus) Register(eventType EventType, handleFunc HandleFunc) {
@@ -661,14 +661,14 @@ func (obj *EventBus) Stop() {
 func (obj *EventBus) Wait() {
 	defer close(obj.events)
 
-	stopped := <-obj.stopppedSignal
+	stopped := <-obj.stoppedSignal
 	fmt.Println("event bus stopped, ", stopped)
 }
 
 func (obj *EventBus) HandleEvents() {
 	defer func() {
 		fmt.Println("HandleEvents quit")
-		obj.stopppedSignal <- true
+		obj.stoppedSignal <- true
 	}()
 
 LOOP:
