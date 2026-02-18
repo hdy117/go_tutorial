@@ -2,9 +2,9 @@
 
 ## 项目概述
 
-本项目是一个**Go 语言核心特性教程**，旨在帮助学习者系统掌握 Go 语言的关键概念和编程技巧。项目包含 10 个循序渐进的教学文件，涵盖从基础语法到高级特性的完整学习路径。
+本项目是一个**Go 语言核心特性教程**，旨在帮助学习者系统掌握 Go 语言的关键概念和编程技巧。项目采用中文作为主要文档和注释语言，包含 10 个循序渐进的教学文件，涵盖从基础语法到高级特性的完整学习路径。
 
-**项目特点**：
+**项目元数据**：
 - 模块名称：`c03`
 - 语言版本：Go 1.25.5
 - 文档语言：中文（注释和文档主要使用中文）
@@ -14,49 +14,49 @@
 
 ```
 go_tutorial/
-├── main.go                    # 项目入口（极简示例）
-├── go.mod                     # Go 模块定义
+├── main.go                    # 项目入口（极简示例，仅输出 "end of main function"）
+├── go.mod                     # Go 模块定义（模块名 c03，Go 1.25.5）
 ├── go.sum                     # 依赖校验和
 ├── .gitignore                 # Git 忽略配置（仅忽略 build 目录）
-├── README.md                  # 项目主文档（Go 核心技术脑图）
+├── README.md                  # 项目主文档（Go 核心技术脑图，含代码示例和学习路线）
 ├── AGENTS.md                  # 本文件
 │
-├── tutorial/                  # 核心教程目录
-│   ├── README.md              # 教程使用指南
-│   ├── exercises.md           # 练习题汇总（按难度分级）
-│   ├── user.json              # 示例数据文件
+├── tutorial/                  # 核心教程目录（10 个教学文件，共约 6200+ 行代码）
+│   ├── README.md              # 教程使用指南（文件说明、学习路线、使用方法）
+│   ├── exercises.md           # 练习题汇总（约 70 道练习题，按难度分级）
+│   ├── user.json              # 示例数据文件（用于 JSON 处理示例）
 │   │
-│   ├── 01_basic_syntax.go     # 基础语法（变量、类型、控制流、数组、切片、Map）
-│   ├── 02_functions.go        # 函数特性（多返回值、闭包、defer、递归）
-│   ├── 03_struct_method.go    # 结构体与方法（值/指针接收者、嵌入）
-│   ├── 04_interface.go        # 接口（隐式实现、类型断言、空接口）
-│   ├── 05_concurrency.go      # 并发编程（Goroutine、Channel、并发模式）
-│   ├── 06_sync_context.go     # 同步原语与 Context（Mutex、WaitGroup、Context）
-│   ├── 07_error_handling.go   # 错误处理（自定义错误、错误链、panic/recover）
-│   ├── 08_generics.go         # 泛型编程（类型参数、约束、泛型容器）
-│   ├── 09_reflect.go          # 反射（类型检查、值操作、结构体反射）
-│   └── 10_standard_lib.go     # 标准库常用包
+│   ├── 01_basic_syntax.go     # 基础语法（514 行）- 变量、类型、控制流、数组、切片、Map
+│   ├── 02_functions.go        # 函数特性（527 行）- 多返回值、闭包、defer、递归
+│   ├── 03_struct_method.go    # 结构体与方法（898 行）- 值/指针接收者、嵌入
+│   ├── 04_interface.go        # 接口（555 行）- 隐式实现、类型断言、空接口
+│   ├── 05_concurrency.go      # 并发编程（567 行）- Goroutine、Channel、并发模式
+│   ├── 06_sync_context.go     # 同步原语与 Context（637 行）- Mutex、WaitGroup、Context
+│   ├── 07_error_handling.go   # 错误处理（560 行）- 自定义错误、错误链、panic/recover
+│   ├── 08_generics.go         # 泛型编程（719 行）- 类型参数、约束、泛型容器
+│   ├── 09_reflect.go          # 反射（662 行）- 类型检查、值操作、结构体反射
+│   └── 10_standard_lib.go     # 标准库常用包（634 行）- fmt、strings、time、os、net/http 等
 │
 └── skills/golang/             # Go 开发技能库
-    ├── SKILL.md               # Go 开发指南
-    ├── assets/                # 资源文件（空）
+    ├── SKILL.md               # Go 开发指南（Effective Go 速查、常见模式、最佳实践）
+    ├── assets/                # 资源文件（空目录）
     ├── references/            # 参考文档
-    │   ├── effective-go.md    # Effective Go 速查
-    │   ├── pitfalls.md        # 常见陷阱
-    │   └── performance.md     # 性能优化提示
+    │   ├── effective-go.md    # Effective Go 速查（约 60 行）
+    │   ├── pitfalls.md        # 常见陷阱（约 80 行）
+    │   └── performance.md     # 性能优化提示（约 70 行）
     └── scripts/
-        └── init_module.py     # 新项目初始化脚本
+        └── init_module.py     # 新项目初始化脚本（196 行 Python 脚本）
 ```
 
 ## 技术栈
 
-### 核心依赖
+### Go 版本与依赖
 - **Go 版本**：1.25.5
 - **外部依赖**：
   - `github.com/google/uuid v1.6.0` - UUID 生成
-  - `golang.org/x/exp` - Go 扩展包
+  - `golang.org/x/exp v0.0.0-20260112195511-716be5621a96` - Go 扩展包
 
-### 标准库覆盖
+### 标准库覆盖范围
 教学文件涵盖了以下标准库包：
 - `fmt`, `strings`, `bytes`, `strconv` - 格式化与字符串处理
 - `time` - 时间处理
@@ -80,25 +80,13 @@ go run tutorial/02_functions.go
 # ... 以此类推
 
 # 构建可执行文件
-go build -o output tutorial/01_basic_syntax.go
+go build -o build/output tutorial/01_basic_syntax.go
 ```
 
 ### 主程序
 ```bash
-# 运行项目入口
+# 运行项目入口（极简示例）
 go run main.go
-```
-
-### 测试
-```bash
-# 运行所有测试
-go test ./...
-
-# 运行特定包测试
-go test -v ./tutorial/
-
-# 基准测试示例
-go test -bench=. ./...
 ```
 
 ### 模块管理
@@ -180,8 +168,8 @@ func main() {
 - ⭐⭐⭐⭐ **专家**：需要综合运用多个模块的知识
 
 ### 练习题位置
-- 每个教学文件末尾包含嵌入式练习题
-- `tutorial/exercises.md` 汇总所有练习题
+- 每个教学文件末尾包含嵌入式练习题（以注释形式给出）
+- `tutorial/exercises.md` 汇总所有练习题（约 70 道，按文件和难度分类）
 
 ### 练习模式
 1. 阅读教学文件中的概念说明
@@ -201,6 +189,7 @@ func main() {
 ### 并发编程原则
 ```
 不要通过共享内存来通信，而要通过通信来共享内存
+
 - Channel 的拥有者负责关闭
 - 不要从接收方关闭 channel
 - 使用 select 处理多个 channel 操作
@@ -233,8 +222,8 @@ python3 skills/golang/scripts/init_module.py <module-name>
 该脚本会创建：
 - 标准目录结构（cmd/, internal/, pkg/, api/, configs/, scripts/）
 - 基础 main.go 模板
-- .gitignore 配置
-- Makefile 构建脚本
+- 完整的 .gitignore 配置
+- Makefile 构建脚本（含 build、test、lint、run 等目标）
 - README.md 模板
 
 ## 参考资料
@@ -243,6 +232,7 @@ python3 skills/golang/scripts/init_module.py <module-name>
 - `skills/golang/references/effective-go.md` - Effective Go 速查
 - `skills/golang/references/pitfalls.md` - 常见陷阱
 - `skills/golang/references/performance.md` - 性能优化
+- `skills/golang/SKILL.md` - Go 开发技能指南（含模式、测试、常用库推荐）
 
 ### 外部资源
 - [Go 官方文档](https://golang.org/doc/)

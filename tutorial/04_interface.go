@@ -23,9 +23,13 @@ package main
 
 import (
 	"bytes"
+	"encoding/json"
+	"errors"
 	"fmt"
 	"io"
+	"math"
 	"os"
+	"time"
 )
 
 // ============================================
@@ -332,7 +336,7 @@ func demonstrateCustomError() {
 	fmt.Println(err2)
 
 	// 检查错误类型
-	var valErr ValidationError
+	// var valErr ValidationError
 	if ok := interface{}(err1).(ValidationError); ok.Field == "email" {
 		fmt.Println("是邮箱验证错误")
 	}
@@ -465,6 +469,10 @@ func demonstrateDependencyInjection() {
 // 主函数
 // ============================================
 
+func Separator04() {
+	fmt.Println("=================================")
+}
+
 func main() {
 	demonstratePolymorphism()
 	demonstrateEmptyInterface()
@@ -485,23 +493,76 @@ func main() {
 	//   - 编写函数 PrintShapeInfo(s Shape) 打印形状信息
 	//   - 创建 Shape 切片，遍历并打印每个形状的信息
 	//
+	Separator04()
+	shapes := []IShape{&Circle{radius: 2.3}, &MyRectangle{length: 2.3, width: 2.3}}
+	for _, shape := range shapes {
+		fmt.Println("area:", shape.Area())
+		fmt.Println("Perimeter:", shape.Perimeter())
+	}
+
 	// 练习 2：实现一个通用的 Max 函数，使用接口比较大小
 	//   - 定义 Comparable 接口，包含 Compare(other interface{}) int
 	//   - 实现 Int 和 String 类型满足该接口
 	//   - 实现 Max(a, b Comparable) Comparable 返回较大者
 	//
+	Separator04()
+	datas := []IComparable{Int{data: 9}}
+	for _, data := range datas {
+		fmt.Println("data:", (data.(Int)).data)
+		maxData, _ := max(data, Int{data: 1})
+		fmt.Println("max data:", maxData.data)
+	}
+
 	// 练习 3：实现一个简单的 HTTP Handler 接口模拟
 	//   - 定义 Handler 接口，包含 ServeHTTP(request string) string
 	//   - 实现 HomeHandler、AboutHandler、NotFoundHandler
 	//   - 使用 map[string]Handler 实现路由
 	//   - 编写函数处理请求：func Handle(path string, handlers map[string]Handler)
 	//
+	Separator04()
+	Handler("home")
+	Handler("notfound")
+	Handler("about")
+
 	// 练习 4：实现一个事件系统
 	//   - 定义 Event 接口，包含 Type() string 和 Data() interface{}
 	//   - 实现 UserLoginEvent、OrderCreatedEvent
 	//   - 定义 EventHandler 接口，包含 Handle(e Event)
 	//   - 实现 EventBus，支持订阅和发布事件
 	//
+	Separator04()
+	eventBus := EventBus{
+		events:           make(chan IEvent, 5),
+		eventRouteMap:    EventRouteMap{},
+		stopSignal:       make(chan bool),
+		stopppedSignal:   make(chan bool),
+	}
+	eventBus.Register(Event_UserLogin, UserLoginHandler)
+	eventBus.Register(Event_OrderCreate, OrderCreateHandler)
+
+	go eventBus.HandleEvents()
+
+	event0 := UserLoginEvent{
+		EventType: Event_UserLogin,
+		UserName:  "Jim",
+		Date:      time.Now(),
+	}
+	event1 := OrderCreateEvent{
+		EventType: Event_OrderCreate,
+		Date:      time.Now(),
+		OrderNum:  "123456789",
+	}
+	eventBus.Signal(event0)
+	eventBus.Signal(event1)
+
+	// fire stop signal to kill event bus
+	go func() {
+		time.Sleep(time.Second * 2)
+		eventBus.Stop()
+	}()
+
+	eventBus.Wait()
+
 	// 练习 5：使用空接口实现一个泛型栈（Go 1.18 之前的做法）
 	//   type Stack struct { items []interface{} }
 	//   - 实现 Push(item interface{})
@@ -514,4 +575,237 @@ func main() {
 	//   - 定义 Sorter 接口，包含 Sort([]interface{}) []interface{}
 	//   - 实现 BubbleSorter、QuickSorter
 	//   - 实现一个通用函数，接收 Sorter 和待排序数据，返回排序结果
+}
+
+// 练习 4：实现一个事件系统
+//   - 定义 Event 接口，包含 Type() string 和 Data() interface{}
+//   - 实现 UserLoginEvent、OrderCreatedEvent
+//   - 定义 EventHandler 接口，包含 Handle(e Event)
+//   - 实现 EventBus，支持订阅和发布事件
+type IEvent interface {
+	Type() string
+	Data() any
+}
+
+const (
+	Event_UserLogin   = "UserLogin"
+	Event_OrderCreate = "OrderCreate"
+)
+
+type EventType = string
+
+type UserLoginEvent struct {
+	EventType EventType `json:"event_type"`
+	UserName  string    `json:"user_name"`
+	Date      time.Time `json:"login_date"`
+}
+type OrderCreateEvent struct {
+	EventType EventType `json:"event_type"`
+	Date      time.Time `json:"login_date"`
+	OrderNum  string    `json:"order_num"`
+}
+
+func (obj UserLoginEvent) Type() string {
+	return obj.EventType
+}
+
+func (obj UserLoginEvent) Data() any {
+	jsonData, err := json.Marshal(obj)
+
+	if err != nil {
+		fmt.Println("json marshal error, ", err, ", origin data:", obj)
+		return ""
+	}
+
+	return string(jsonData)
+}
+
+func (obj OrderCreateEvent) Type() string {
+	return obj.EventType
+}
+
+func (obj OrderCreateEvent) Data() any {
+	jsonData, err := json.Marshal(obj)
+
+	if err != nil {
+		fmt.Println("json marshal error, ", err, ", origin data:", obj)
+		return ""
+	}
+
+	return string(jsonData)
+}
+
+type HandleFunc = func(event IEvent)
+type EventRouteMap = map[EventType]HandleFunc
+
+type EventBus struct {
+	events         chan IEvent
+	eventRouteMap  EventRouteMap
+	stopSignal     chan bool
+	stopppedSignal chan bool
+}
+
+func (obj *EventBus) Register(eventType EventType, handleFunc HandleFunc) {
+	obj.eventRouteMap[eventType] = handleFunc
+	fmt.Println("register event on func, ", eventType, handleFunc)
+}
+
+func (obj *EventBus) Signal(event IEvent) {
+	obj.events <- event
+}
+
+func (obj *EventBus) Stop() {
+	obj.stopSignal <- true
+}
+
+func (obj *EventBus) Wait() {
+	defer close(obj.events)
+
+	stopped := <-obj.stopppedSignal
+	fmt.Println("event bus stopped, ", stopped)
+}
+
+func (obj *EventBus) HandleEvents() {
+	defer func() {
+		fmt.Println("HandleEvents quit")
+		obj.stopppedSignal <- true
+	}()
+
+LOOP:
+	for {
+		select {
+		case event := <-obj.events:
+			if handleFunc, ok := obj.eventRouteMap[event.Type()]; ok {
+				go handleFunc(event)
+			}
+		case stop := <-obj.stopSignal:
+			fmt.Println("got stop signal:", stop)
+			break LOOP
+		}
+	}
+}
+
+func UserLoginHandler(event IEvent) {
+	fmt.Println("func UserLoginHandler, event type:", event.Type(), ", data:", event.Data().(string))
+}
+
+func OrderCreateHandler(event IEvent) {
+	fmt.Println("func OrderCreateHandler, event type:", event.Type(), ", data:", event.Data().(string))
+}
+
+// 练习 3：实现一个简单的 HTTP Handler 接口模拟
+//   - 定义 Handler 接口，包含 ServeHTTP(request string) string
+//   - 实现 HomeHandler、AboutHandler、NotFoundHandler
+//   - 使用 map[string]Handler 实现路由
+//   - 编写函数处理请求：func Handle(path string, handlers map[string]Handler)
+//
+
+type IHttpHandler interface {
+	ServeHttp(request string) string
+}
+
+type HomeHandler struct{}
+
+func (obj HomeHandler) ServeHttp(request string) string {
+	return "this is home page"
+}
+
+type AboutHandler struct{}
+
+func (obj AboutHandler) ServeHttp(request string) string {
+	return "this is about page"
+}
+
+type NotFoundHandler struct{}
+
+func (obj NotFoundHandler) ServeHttp(request string) string {
+	return "this is 404 page"
+}
+
+func Handler(request string) {
+	type RouterMap = map[string]IHttpHandler
+	routerMap := RouterMap{}
+
+	routerMap["home"] = &HomeHandler{}
+	routerMap["about"] = &AboutHandler{}
+	routerMap["notfound"] = &NotFoundHandler{}
+
+	if handler, ok := routerMap[request]; ok {
+		resp := handler.ServeHttp(request)
+		fmt.Println("request:", request, ", response:", resp)
+	}
+}
+
+// ///////////////////////////
+type IComparable interface {
+	Compare(other any) (int, error)
+}
+
+type Int struct {
+	data int
+}
+
+func (obj Int) Compare(other any) (int, error) {
+	var err error
+	val, ok := other.(Int)
+	if ok {
+		if obj.data < val.data {
+			return -1, nil
+		} else if obj.data == val.data {
+			return 0, nil
+		} else {
+			return 1, nil
+		}
+	} else {
+		err = errors.New("input is not Int type")
+	}
+	return 0, err
+}
+
+func max(a, b IComparable) (Int, error) {
+	aLocal, _ := a.(Int)
+	bLocal, _ := b.(Int)
+	ret, err := aLocal.Compare(bLocal)
+	if err != nil {
+		fmt.Println("error:", err.Error())
+		return Int{data: 0}, err
+	}
+
+	if ret < 0 {
+		fmt.Println("b is bigger:", bLocal.data, ", while a is:", aLocal.data)
+		return bLocal, nil
+	}
+	return aLocal, nil
+}
+
+/////////////////////////////////
+
+type IShape interface {
+	Area() float64
+	Perimeter() float64
+}
+
+type Circle struct {
+	radius float64
+}
+
+func (obj *Circle) Area() float64 {
+	return math.Pi * obj.radius * obj.radius
+}
+
+func (obj *Circle) Perimeter() float64 {
+	return 2 * math.Pi * obj.radius
+}
+
+type MyRectangle struct {
+	width  float64
+	length float64
+}
+
+func (obj *MyRectangle) Area() float64 {
+	return obj.width * obj.length
+}
+
+func (obj *MyRectangle) Perimeter() float64 {
+	return 2 * (obj.length + obj.width)
 }
