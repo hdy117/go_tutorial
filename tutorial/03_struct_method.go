@@ -584,6 +584,172 @@ func main() {
 	//   - 实现 Delete(index int) 删除指定位置
 	//   - 实现 Reverse() 反转链表
 	//   - 实现 String() 打印链表内容
+	list := MyLinkedList{
+		head: &Node{
+			val:  0,
+			next: nil,
+		},
+		length: 0,
+	}
+	list.Append(1)
+	list.Append(2)
+	list.Append(3)
+	list.Append(4)
+	list.Append(5)
+	list.PrintAll()
+	list.InsertAt(0, 0)
+	list.PrintAll()
+	err = list.InsertAt(8, 8)
+	if err != nil {
+		fmt.Println("error:", err)
+	}
+	list.PrintAll()
+	err = list.InsertAt(0, -1)
+	list.PrintAll()
+	list.Reverse()
+	list.PrintAll()
+	list.ReverseRecursion()
+	list.PrintAll()
+}
+
+// 练习 5：实现一个链表结构体
+//
+//	type Node struct {
+//	    Value int
+//	    Next  *Node
+//	}
+//	- 实现 Append(value int) 在尾部添加
+//	- 实现 Insert(index, value int) 在指定位置插入
+//	- 实现 Delete(index int) 删除指定位置
+//	- 实现 Reverse() 反转链表
+//	- 实现 String() 打印链表内容
+type Node struct {
+	val  int
+	next *Node
+}
+
+type MyLinkedList struct {
+	head   *Node  // head of this linked list
+	length uint64 // length of linked list
+}
+
+func (list *MyLinkedList) Append(val int) {
+	// if root is nil
+	if list.head.next == nil {
+		list.head.next = &Node{
+			val:  val,
+			next: nil,
+		}
+		return
+	}
+
+	// first node
+	node := list.head.next
+
+	// loop until node.next is nil
+	for node.next != nil {
+		node = node.next
+	}
+
+	// do insert
+	node.next = &Node{
+		val:  val,
+		next: nil,
+	}
+
+	// update length
+	list.length += 1
+}
+
+func (list *MyLinkedList) PrintAll() {
+	separator()
+	node := list.head.next
+	for node != nil {
+		fmt.Printf("node val:%d, addr:%p, next:%p\n", node.val, node, node.next)
+		node = node.next
+	}
+	separator()
+}
+
+func (list *MyLinkedList) InsertAt(index int, val int) error {
+	if list == nil || list.head == nil {
+		err := errors.New("list or list head is nullptr")
+		return err
+	}
+
+	preNode := list.head
+	node := list.head.next
+
+	for i := 0; i < index && node != nil; i++ {
+		preNode = node
+		node = node.next
+	}
+
+	preNode.next = &Node{
+		val:  val,
+		next: node,
+	}
+
+	return nil
+}
+
+func (list *MyLinkedList) Reverse() {
+	//pre check
+	if list == nil || list.head == nil {
+		fmt.Println("list is empty, do nothing")
+		return
+	}
+
+	// reverse
+	var preNode *Node = nil
+	node := list.head.next
+	for node != nil {
+		// save next of node
+		nextNode := node.next
+
+		// reverse, pointing back
+		node.next = preNode
+
+		// break if reach end
+		if nextNode == nil {
+			break
+		}
+
+		// move forward
+		preNode = node
+		node = nextNode
+		// fmt.Printf("node addr:%p\n", node)
+	}
+
+	// update head
+	list.head.next = node
+}
+func recursionFunc(nodePre *Node, node *Node) *Node {
+	if node.next == nil {
+		// this is the last node in the list
+		// will be returned as the new first node
+		return node
+	}
+
+	// save next node
+	nodeNext := node.next
+
+	// do inverse
+	node.next = nodePre
+	fmt.Printf("node pre:%p, node:%p\n", nodePre, node)
+
+	return recursionFunc(node, nodeNext)
+}
+
+func (list *MyLinkedList) ReverseRecursion() {
+	//pre check
+	if list == nil || list.head == nil {
+		fmt.Println("list is empty, do nothing")
+		return
+	}
+
+	// recursion
+	list.head.next = recursionFunc(nil, list.head.next)
 }
 
 // 练习 4：实现一个缓存结构体

@@ -112,12 +112,12 @@ func demonstratePolymorphism() {
 	dog := Dog{Name: "旺财"}
 	cat := Cat{Name: "咪咪"}
 	robot := Robot{Model: "R2-D2"}
-	
+
 	fmt.Println("=== 多态调用 ===")
 	MakeSound(dog)
 	MakeSound(cat)
 	MakeSound(robot)
-	
+
 	// 接口切片
 	fmt.Println("\n=== 接口切片 ===")
 	animals := []Speaker{dog, cat, robot}
@@ -137,18 +137,18 @@ func describe(i interface{}) {
 
 func demonstrateEmptyInterface() {
 	fmt.Println("\n=== 空接口 ===")
-	
+
 	// 空接口可以接受任意类型
 	describe(42)
 	describe("hello")
 	describe(3.14)
 	describe([]int{1, 2, 3})
 	describe(map[string]int{"a": 1})
-	
+
 	// 使用 any（Go 1.18+）
 	var x any = "使用 any"
 	fmt.Printf("x: %v\n", x)
-	
+
 	// 空接口的常见用途：
 	// 1. 处理未知类型的数据（JSON 解码）
 	// 2. 实现通用的数据结构
@@ -165,15 +165,15 @@ func demonstrateEmptyInterface() {
 
 func demonstrateTypeAssertion() {
 	fmt.Println("\n=== 类型断言 ===")
-	
+
 	var i interface{} = "hello"
-	
+
 	// 安全类型断言
 	s, ok := i.(string)
 	if ok {
 		fmt.Printf("字符串值: %s, 长度: %d\n", s, len(s))
 	}
-	
+
 	// 断言失败不会 panic
 	n, ok := i.(int)
 	if !ok {
@@ -181,7 +181,7 @@ func demonstrateTypeAssertion() {
 	} else {
 		fmt.Println("整数值:", n)
 	}
-	
+
 	// 空接口切片处理
 	var data []interface{} = []interface{}{
 		"string",
@@ -190,7 +190,7 @@ func demonstrateTypeAssertion() {
 		true,
 		Dog{Name: "Buddy"},
 	}
-	
+
 	for _, item := range data {
 		switch v := item.(type) {
 		case string:
@@ -232,7 +232,7 @@ func doSomething(value interface{}) {
 
 func demonstrateTypeSwitch() {
 	fmt.Println("\n=== 类型开关 ===")
-	
+
 	doSomething("Hello")
 	doSomething(42)
 	doSomething([]int{1, 2, 3})
@@ -252,21 +252,21 @@ func demonstrateTypeSwitch() {
 
 func demonstrateInterfaceInternals() {
 	fmt.Println("\n=== 接口值内部 ===")
-	
+
 	var p *Dog = nil
 	var s Speaker
-	
+
 	// s 是 nil 接口值
 	fmt.Printf("s == nil: %v\n", s == nil)
-	
+
 	// 赋值后，s 不是 nil，即使值是 nil
 	s = p
 	fmt.Printf("s == nil: %v (注意！不为 nil)\n", s == nil)
 	fmt.Printf("s 的类型: %T, 值: %v\n", s, s)
-	
+
 	// 调用方法会 panic，因为值是 nil
 	// fmt.Println(s.Speak())  // panic!
-	
+
 	// 正确检查方式
 	if p != nil {
 		s = p
@@ -324,13 +324,13 @@ func (e CodedError) Error() string {
 
 func demonstrateCustomError() {
 	fmt.Println("\n=== 自定义错误 ===")
-	
+
 	err1 := ValidationError{Field: "email", Message: "格式不正确"}
 	err2 := CodedError{Code: 404, Message: "页面未找到"}
-	
+
 	fmt.Println(err1)
 	fmt.Println(err2)
-	
+
 	// 检查错误类型
 	var valErr ValidationError
 	if ok := interface{}(err1).(ValidationError); ok.Field == "email" {
@@ -363,10 +363,10 @@ func (r Rectangle) String() string {
 
 func demonstrateStringer() {
 	fmt.Println("\n=== 自定义 Stringer ===")
-	
+
 	p := Point{X: 10, Y: 20}
 	r := Rectangle{Width: 30, Height: 40}
-	
+
 	// 使用 %v 或 %s 会自动调用 String() 方法
 	fmt.Printf("点: %v\n", p)
 	fmt.Printf("矩形: %s\n", r)
@@ -378,20 +378,20 @@ func demonstrateStringer() {
 
 func demonstrateStandardInterfaces() {
 	fmt.Println("\n=== 标准库接口 ===")
-	
+
 	// io.Writer 示例
 	var w io.Writer = os.Stdout
 	w.Write([]byte("Hello, io.Writer!\n"))
-	
+
 	// bytes.Buffer 实现了 io.Writer
 	var buf bytes.Buffer
 	buf.Write([]byte("写入 buffer"))
 	fmt.Println(buf.String())
-	
+
 	// 使用 io.Copy
 	input := bytes.NewReader([]byte("复制这段文字\n"))
 	io.Copy(os.Stdout, input)
-	
+
 	// fmt.Stringer 示例
 	var s fmt.Stringer = Point{X: 1, Y: 2}
 	fmt.Println(s.String())
@@ -446,13 +446,13 @@ func (s *UserService) GetUserName(id int) (string, error) {
 
 func demonstrateDependencyInjection() {
 	fmt.Println("\n=== 依赖注入 ===")
-	
+
 	// 使用模拟实现
 	mockRepo := NewMockUserRepository()
 	mockRepo.SaveUser(1, "张三")
-	
+
 	service := NewUserService(mockRepo)
-	
+
 	name, err := service.GetUserName(1)
 	if err != nil {
 		fmt.Println("错误:", err)
@@ -475,7 +475,7 @@ func main() {
 	demonstrateStringer()
 	demonstrateStandardInterfaces()
 	demonstrateDependencyInjection()
-	
+
 	// ============================================
 	// 练习题
 	// ============================================
